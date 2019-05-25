@@ -130,6 +130,41 @@
           }
         }
       }
+    },
+    "json-adapter": {
+      "root": "projects/json-adapter",
+      "sourceRoot": "projects/json-adapter/src",
+      "projectType": "library",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/json-adapter/tsconfig.lib.json",
+            "project": "projects/json-adapter/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/json-adapter/src/test.ts",
+            "tsConfig": "projects/json-adapter/tsconfig.spec.json",
+            "karmaConfig": "projects/json-adapter/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/json-adapter/tsconfig.lib.json",
+              "projects/json-adapter/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "my-json-adapter"
