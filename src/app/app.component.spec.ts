@@ -1,19 +1,23 @@
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { JsonAdapterModule } from 'json-adapter';
-import { UserModel } from './shared/models/user.model';
-import { UserAdapter } from './shared/adapters/user.adapter';
 import { UserService } from './shared/services/user.service';
+import { of } from 'rxjs';
+import { UserModel } from './shared/models/user.model';
 
 describe('AppComponent', () => {
+  const userService: UserService = {
+    getUser() {}
+  } as any;
+
+  const user = new UserModel();
+
   beforeEach(async(() => {
+    user.id = 1;
+    user.name = 'User Test 1';
+    spyOn(userService, 'getUser').and.returnValue(of(user));
+
     TestBed.configureTestingModule({
-      imports: [
-        JsonAdapterModule.withAdapters([
-          { type: UserModel, adapter: UserAdapter }
-        ])
-      ],
-      providers: [UserService],
+      providers: [{ provide: UserService, useValue: userService }],
       declarations: [AppComponent]
     }).compileComponents();
   }));
@@ -36,6 +40,15 @@ describe('AppComponent', () => {
     const compiled = fixture.debugElement.nativeElement;
     expect(compiled.querySelector('h1').textContent).toContain(
       'Welcome to my-json-adapter!'
+    );
+  });
+
+  it('should render User as json', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.debugElement.nativeElement;
+    expect(compiled.querySelector('p').textContent).toContain(
+      '"name": "User Test 1"'
     );
   });
 });
