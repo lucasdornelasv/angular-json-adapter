@@ -1,24 +1,17 @@
-import { Injectable, Injector, Type } from '@angular/core';
-import { IJsonSerializerContext, IJsonDeserializerContext } from './json-context.interface';
-import { IJsonSerializer } from './json-serializer.interface';
+import { Injectable, Injector, Type, Inject } from '@angular/core';
+import { IJsonDeserializerContext } from './json-context.interface';
 import { IJsonDeserializer } from './json-deserializer.interface';
+import { JSON_ADAPTER_STORE } from './json-adapter.store';
 
 @Injectable({
   providedIn: 'root'
 })
-export class JsonAdapterService implements IJsonSerializerContext, IJsonDeserializerContext {
-
-  constructor(private injector: Injector) { }
-
-  serialize<T>(type: Type<T>, value: T): any {
-    const adapter = this.getSerializer<T>(type);
-    return this.serializeInternal<T>(adapter, value);
-  }
-
-  serializeArray<T>(type: Type<T>, values: T[]): any[] {
-    const adapter = this.getSerializer<T>(type);
-    return this.mapArray(values, value => this.serializeInternal<T>(adapter, value));
-  }
+export class JsonAdapterService implements IJsonDeserializerContext {
+  constructor(
+    private injector: Injector,
+    @Inject(JSON_ADAPTER_STORE)
+    private adapterStore: Map<Type<any>, Type<IJsonDeserializer<any>>>
+  ) {}
 
   deserialize<T>(type: Type<T>, value: any): T {
     const adapter = this.getDeserializer<T>(type);
@@ -27,12 +20,9 @@ export class JsonAdapterService implements IJsonSerializerContext, IJsonDeserial
 
   deserializeArray<T>(type: Type<T>, values: any[]): T[] {
     const adapter = this.getDeserializer<T>(type);
-    return this.mapArray(values, value => this.deserializeInternal<T>(adapter, value));
-  }
-
-  private serializeInternal<T>(adapter: IJsonSerializer<T>, value: T): any {
-    const jsonObj = adapter.serialize(value, this);
-    return jsonObj;
+    return this.mapArray(values, value =>
+      this.deserializeInternal<T>(adapter, value)
+    );
   }
 
   private deserializeInternal<T>(adapter: IJsonDeserializer<T>, value: any): T {
@@ -49,14 +39,9 @@ export class JsonAdapterService implements IJsonSerializerContext, IJsonDeserial
     return result;
   }
 
-  private getSerializer<T>(type: Type<T>): IJsonSerializer<T> {
-    const adapter = this.injector.get(type) as any;
-    return adapter as IJsonSerializer<T>;
-  }
-
   private getDeserializer<T>(type: Type<T>): IJsonDeserializer<T> {
-    const adapter = this.injector.get(type) as any;
+    const adapterType = this.adapterStore.get(type);
+    const adapter = this.injector.get(adapterType) as any;
     return adapter as IJsonDeserializer<T>;
   }
-
 }

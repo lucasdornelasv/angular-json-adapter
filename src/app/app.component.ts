@@ -1,46 +1,32 @@
-import { Component } from "@angular/core";
-import { JsonAdapterService } from "json-adapter";
-import { DogModel } from "./models/dog.model";
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { UserService } from './shared/services/user.service';
+import { Subscription } from 'rxjs';
+import { UserModel } from './shared/models/user.model';
 
 @Component({
-  selector: "app-root",
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.css"]
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent {
-  title = "my-json-adapter";
+export class AppComponent implements OnInit, OnDestroy {
+  title = 'my-json-adapter';
 
-  constructor(jsonAdapterService: JsonAdapterService) {
-    const dogs = jsonAdapterService.deserializeArray<DogModel>(DogModel, [
-      {
-        id: "ID",
-        name: "Kiara",
-        owner: {
-          id: "ID2",
-          name: "Lucas"
-        }
-      },
-      {
-        id: "ID",
-        name: "Kiara",
-        owner: {
-          id: "ID2",
-          name: "Lucas"
-        }
-      }
-    ]);
+  user: UserModel;
 
-    console.log(dogs);
-    this.test().then(console.log);
+  private subscription: Subscription;
+
+  constructor(private userService: UserService) {}
+
+  ngOnInit() {
+    this.subscription = this.userService
+      .getUser()
+      .subscribe(user => (this.user = user));
   }
 
-  async test() {
-    const result = await new Promise(resolve => {
-      setTimeout(() => {
-        resolve(5)
-      }, 3000);
-    });
-
-    return result;
+  ngOnDestroy() {
+    if (this.subscription && !this.subscription.closed) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
   }
 }
